@@ -1,0 +1,22 @@
+# game.toml — Gumshoe (NES, Mapper 66 / GxROM, 128KB PRG, 32KB CHR ROM)
+
+[game]
+output_prefix = "gumshoe"
+
+# Inline dispatch: pops return address to find an inline 2-byte LE address
+# table. Index is in A (pre-shifted by ASL). Each 32KB window has its own
+# dispatch routine at a different address.
+[[inline_dispatch]]
+addr = 0xD476
+[[inline_dispatch]]
+addr = 0xC768
+[[inline_dispatch]]
+addr = 0xD6AD
+[[inline_dispatch]]
+addr = 0xA89D
+
+[functions]
+# Functions discovered via dispatch_misses.log at runtime
+bank6 = [
+    0x80BF,
+]

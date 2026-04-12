@@ -1,0 +1,5 @@
+{
+  "romSha256": "4628f32db9b826d19fe5dd8e2c45a9f70e1041f15b7b44b06dee2f01731566e8",
+  "smokeFrames": 600,
+  "smokeInterval": 100
+}
