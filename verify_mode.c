@@ -145,7 +145,22 @@ int verify_mode_run_nmi(void) {
                 }
             }
         }
-    } else if (s_divergence_count > 0 && g_frame_count < 200) {
+
+        /* Always log section-progression addresses when they diverge */
+        {
+            static const int watch[] = {0x24, 0x25, 0x26, 0x5E, 0xDB, 0xE7};
+            for (int w = 0; w < 6; w++) {
+                int a = watch[w];
+                if (s_native_pre_nmi[a] != emu_ram[a]) {
+                    fprintf(stderr, "[verify-section] $%04X: native=0x%02X emu=0x%02X (frame %llu)\n",
+                            a, s_native_pre_nmi[a], emu_ram[a],
+                            (unsigned long long)g_frame_count);
+                }
+            }
+        }
+    }
+
+    if (s_divergence_count > 0 && g_frame_count < 200) {
         /* Log when frames match after prior divergences — helps identify
          * transient vs persistent differences */
         fprintf(stderr, "[verify] MATCH frame %llu (after %llu divergences)\n",
