@@ -15,8 +15,28 @@ addr = 0xD6AD
 [[inline_dispatch]]
 addr = 0xA89D
 
+# Merge: main game loop at $8000 and its continuation at $8024 must share
+# a single function body. Without this, BNE $8000 at $8026 in func_8024
+# becomes a recursive call_by_address() instead of a goto, causing stack overflow.
+[[merge_func]]
+bank = -1
+addr_lo = 0x8000
+addr_hi = 0x8024
+
+# Similarly merge $8087 and $80A2 — JMP $80A2 within $8087 should be goto.
+[[merge_func]]
+bank = -1
+addr_lo = 0x8087
+addr_hi = 0x80A2
+
 [functions]
 # Functions discovered via dispatch_misses.log at runtime
+bank0 = [
+    0x9BBF,
+]
+bank2 = [
+    0x9DEA,
+]
 bank6 = [
     0x80BF,
 ]

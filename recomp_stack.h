@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#define RECOMP_STACK_DEPTH 16
+#define RECOMP_STACK_DEPTH 512
 
 extern const char *g_recomp_stack[RECOMP_STACK_DEPTH];
 extern int         g_recomp_stack_top;
