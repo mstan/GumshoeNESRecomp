@@ -123,16 +123,17 @@ int verify_mode_run_nmi(void) {
         s_mode_trace = fopen("mode_trace.csv", "w");
         if (s_mode_trace)
             fprintf(s_mode_trace,
-                "frame,btn,nat_2C,emu_2C,nat_25,emu_25,nat_26,emu_26,nmi_fires,cycles,instrs,forced_caps,maxdepth_skips,no_ppu\n");
+                "frame,btn,nat_24,emu_24,nat_2C,emu_2C,nat_25,emu_25,nat_26,emu_26,nmi_fires,cycles,instrs,forced_caps,maxdepth_skips,no_ppu\n");
     }
     if (s_mode_trace) {
         uint32_t nf = runtime_pop_nmi_fires();
         uint32_t cy = runtime_pop_cycle_budget_used();
         uint32_t ii = runtime_pop_instrs_ticked();
         uint32_t fc = runtime_pop_forced_caps();
-        fprintf(s_mode_trace, "%llu,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%u,%u,%u,%u,%u,%u\n",
+        fprintf(s_mode_trace, "%llu,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%u,%u,%u,%u,%u,%u\n",
             (unsigned long long)g_frame_count,
             g_controller1_buttons,
+            s_native_pre_nmi[0x24], emu_ram[0x24],
             s_native_pre_nmi[0x2C], emu_ram[0x2C],
             s_native_pre_nmi[0x25], emu_ram[0x25],
             s_native_pre_nmi[0x26], emu_ram[0x26],
