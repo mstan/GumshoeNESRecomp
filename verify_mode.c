@@ -23,6 +23,9 @@
 RunMode  g_run_mode = RUN_MODE_NATIVE;
 static uint64_t s_divergence_count = 0;
 static int s_emu_initialized = 0;
+static FILE *s_mode_trace = NULL;
+static uint64_t s_first_2C_diverge_frame = (uint64_t)-1;
+static uint64_t s_first_25_diverge_frame = (uint64_t)-1;
 
 /* Snapshot of native RAM taken BEFORE NMI — represents end-of-frame state
  * (main loop has finished, game is waiting for next VBlank).  Compare this
@@ -64,19 +67,26 @@ void verify_mode_init(const char *rom_path) {
 }
 
 int verify_mode_run_nmi(void) {
+    /* Frame boundary: only invoke the game's NMI handler when NMI is
+     * enabled.  main_runner.c calls game_run_nmi unconditionally every
+     * wall-clock frame (for oracle sync + frame counter), so this gate
+     * lives here rather than there. */
+    extern uint8_t g_ppuctrl;
+    int nmi_enabled = (g_ppuctrl & 0x80) != 0;
+
     if (g_run_mode == RUN_MODE_NATIVE) {
-        func_NMI();
+        if (nmi_enabled) func_NMI();
         return 1;
     }
 
 #ifdef ENABLE_NESTOPIA_ORACLE
     if (!s_emu_initialized) {
-        func_NMI();
+        if (nmi_enabled) func_NMI();
         return 1;
     }
 
     if (g_run_mode == RUN_MODE_EMULATED) {
-        func_NMI();
+        if (nmi_enabled) func_NMI();
         return 1;
     }
 
@@ -93,8 +103,12 @@ int verify_mode_run_nmi(void) {
     /* 1. Snapshot native RAM BEFORE NMI */
     memcpy(s_native_pre_nmi, g_ram, 0x800);
 
-    /* 2. Run native NMI */
-    func_NMI();
+    /* 2. Run native NMI — but only if NMI is actually enabled.
+     *    When disabled, the frame boundary still advances (oracle runs,
+     *    frame counter ticks) so cadence stays in lockstep, but the
+     *    game's NMI handler is not invoked (matches real-hardware
+     *    behavior where NMI with PPUCTRL bit7=0 simply doesn't fire). */
+    if (nmi_enabled) func_NMI();
 
     /* 3. Run Nestopia for one frame (same input) */
     nestopia_bridge_run_frame(g_controller1_buttons);
@@ -102,6 +116,44 @@ int verify_mode_run_nmi(void) {
     /* 4. Get Nestopia's post-frame RAM */
     static uint8_t emu_ram[0x800];
     nestopia_bridge_get_ram(emu_ram);
+
+    /* Per-frame CSV trace of $2C (decrement counter) and $25/$26 (mode).
+     * Emitted unconditionally so we can see cadence, not just divergence. */
+    if (!s_mode_trace) {
+        s_mode_trace = fopen("mode_trace.csv", "w");
+        if (s_mode_trace)
+            fprintf(s_mode_trace,
+                "frame,btn,nat_2C,emu_2C,nat_25,emu_25,nat_26,emu_26,nmi_fires,cycles,instrs,forced_caps,maxdepth_skips,no_ppu\n");
+    }
+    if (s_mode_trace) {
+        uint32_t nf = runtime_pop_nmi_fires();
+        uint32_t cy = runtime_pop_cycle_budget_used();
+        uint32_t ii = runtime_pop_instrs_ticked();
+        uint32_t fc = runtime_pop_forced_caps();
+        fprintf(s_mode_trace, "%llu,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%u,%u,%u,%u,%u,%u\n",
+            (unsigned long long)g_frame_count,
+            g_controller1_buttons,
+            s_native_pre_nmi[0x2C], emu_ram[0x2C],
+            s_native_pre_nmi[0x25], emu_ram[0x25],
+            s_native_pre_nmi[0x26], emu_ram[0x26],
+            nf, cy, ii,
+            fc & 0xFFFF, (fc >> 16) & 0xFF, (fc >> 24) & 0xFF);
+        if (s_first_2C_diverge_frame == (uint64_t)-1 &&
+            s_native_pre_nmi[0x2C] != emu_ram[0x2C]) {
+            s_first_2C_diverge_frame = g_frame_count;
+            fprintf(stderr, "[verify-first] $2C diverges frame=%llu nat=%02X emu=%02X (btn=%02X)\n",
+                (unsigned long long)g_frame_count,
+                s_native_pre_nmi[0x2C], emu_ram[0x2C], g_controller1_buttons);
+        }
+        if (s_first_25_diverge_frame == (uint64_t)-1 &&
+            s_native_pre_nmi[0x25] != emu_ram[0x25]) {
+            s_first_25_diverge_frame = g_frame_count;
+            fprintf(stderr, "[verify-first] $25 diverges frame=%llu nat=%02X emu=%02X (btn=%02X)\n",
+                (unsigned long long)g_frame_count,
+                s_native_pre_nmi[0x25], emu_ram[0x25], g_controller1_buttons);
+        }
+        fflush(s_mode_trace);
+    }
 
     /* 5. Compare pre-NMI native vs post-frame oracle
      *    Skip stack ($0100-$01FF) — recomp uses C call stack.
@@ -135,8 +187,10 @@ int verify_mode_run_nmi(void) {
                 (unsigned long long)g_frame_count, diff_count,
                 first_diff_addr, first_native, first_emu);
 
-        /* Dump ALL non-stack diverging addresses for first 10 divergences */
-        if (s_divergence_count <= 10) {
+        /* Dump ALL non-stack diverging addresses for first 10 divergences
+         * AND for the 20-frame window straddling the $25 transition. */
+        if (s_divergence_count <= 10 ||
+            (g_frame_count >= 355 && g_frame_count <= 375)) {
             for (int i = 0; i < 0x0800; i++) {
                 if (i >= 0x0100 && i < 0x0200) continue;
                 if (s_native_pre_nmi[i] != emu_ram[i]) {
@@ -148,8 +202,8 @@ int verify_mode_run_nmi(void) {
 
         /* Always log section-progression addresses when they diverge */
         {
-            static const int watch[] = {0x24, 0x25, 0x26, 0x5E, 0xDB, 0xE7};
-            for (int w = 0; w < 6; w++) {
+            static const int watch[] = {0x24, 0x25, 0x26, 0x2C, 0x5E, 0xDB, 0xE7};
+            for (int w = 0; w < 7; w++) {
                 int a = watch[w];
                 if (s_native_pre_nmi[a] != emu_ram[a]) {
                     fprintf(stderr, "[verify-section] $%04X: native=0x%02X emu=0x%02X (frame %llu)\n",
