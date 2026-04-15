@@ -2,5 +2,5 @@
 # First-time setup: run setup.sh (Linux/macOS) or setup.bat (Windows).
 # To update: change sha, re-run the setup script, commit this file.
 
-branch = feature/m66
-sha    = 8802b503fe52890e0dc56ebee022c147d76b2cb8
+branch = feature/scanline-timing
+sha    = f8e6758ba35ba593037d1bace4a38ff20e72c352

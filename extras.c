@@ -316,13 +316,6 @@ void game_on_init(void) {
     g_zapper_x = 128;
     g_zapper_y = 120;
 
-    /* Gumshoe's hit-detection polls $2002 bit6 twice in the same frame
-     * (func_C5BC_b1 Phase 1 at $C627, Phase 2 at $C658). On real hardware,
-     * sprite-0-hit latches once per frame and clears only at pre-render.
-     * The default pulse model clears bit6 on read, which breaks Phase 2.
-     * Enable sticky mode so bit6 is only cleared at VBlank. */
-    g_spr0_sticky_mode = 1;
-
     /* Pre-arm the shot path and its branch gates so manual repros survive inspection latency. */
     gumshoe_add_default_followers();
 
