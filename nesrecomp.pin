@@ -2,5 +2,5 @@
 # First-time setup: run setup.sh (Linux/macOS) or setup.bat (Windows).
 # To update: change sha, re-run the setup script, commit this file.
 
-branch = origin/master
-sha    = 56d85de0895deee300ef4c06817aad7d5abb3ca1
+branch = feature/scanline-timing
+sha    = a30f14760058687e7431fac33db0f4af2acc387b
