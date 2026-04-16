@@ -3,4 +3,4 @@
 # To update: change sha, re-run the setup script, commit this file.
 
 branch = feature/scanline-timing
-sha    = 3945ddc4c32c21db94a765f8ce7c88a78d940cc4
+sha    = a30f14760058687e7431fac33db0f4af2acc387b

@@ -3,7 +3,7 @@
 Static recompilation of Gumshoe (NES) for native PC.
 Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
-> **Status: In Development.** Project structure set up, initial recompilation pending.
+> **Status: Believed to be 100% playable.** Zapper hit detection verified against Mesen 2 oracle. If you find a bug, please open an issue.
 
 ## About
 
@@ -17,6 +17,20 @@ Gumshoe requires the NES Zapper light gun. This recompilation maps your **mouse*
 - **Left click** — pull the trigger
 - A **crosshair** is drawn at the aim point (white normally, red when firing)
 - The OS cursor is hidden while in the game window
+
+## What Works
+
+- Full gameplay with Zapper-as-mouse input
+- Gumshoe jumping, obstacle shooting, enemy hit detection
+- Bottle targets and entity scanning
+- Round progression and scoring
+- Save states (F6/F7)
+
+## Quick Start
+
+1. Download `GumshoeNESRecomp-windows-x64.zip` from [Releases](../../releases)
+2. Extract and run `GumshoeRecomp.exe`
+3. Select your `Gumshoe (USA, Europe).nes` ROM when prompted — the path is saved for future launches
 
 ## Controls
 
@@ -32,6 +46,12 @@ Gumshoe requires the NES Zapper light gun. This recompilation maps your **mouse*
 |-----------------|-------------------|
 | Aim Zapper      | Mouse movement    |
 | Fire Zapper     | Left mouse button |
+
+| Hotkey | Action |
+|--------|--------|
+| F5     | Toggle turbo (fast-forward) |
+| F6     | Save state |
+| F7     | Load state |
 
 ## Building from Source
 
@@ -68,3 +88,7 @@ This is a **static recompiler**, not an emulator. The original 6502 machine code
 - `extras.c` — game-specific hooks (Zapper init, debug server)
 - `generated/` — auto-generated C code (do not edit manually)
 - `nesrecomp/` — framework submodule (recompiler + runner)
+
+## Known Limitations
+
+- Audio is basic (APU register writes are captured but full audio mixing is work-in-progress)
