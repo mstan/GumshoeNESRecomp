@@ -65,6 +65,12 @@ static int gumshoe_parse_int_arg(const char *json, const char *key) {
 }
 
 static void gumshoe_add_default_followers(void) {
+    /* Legacy debug_server_add_follower API removed upstream at nesrecomp
+     * commit 69ecd30 ("retire legacy write_bp + follower + watch_s").
+     * Tier 2.5 replacement: rdb_watch_add (TCP-driven, see
+     * REVERSE_DEBUGGER.md). Disabled for now to unblock the build;
+     * re-port to the new API when needed. */
+#if 0
     static const uint16_t addrs[] = {
         0x001E, 0x0024, 0x0025, 0x0026, 0x0027, 0x0028, 0x0029, 0x002C, 0x002E, 0x002F,
         0x0038, 0x004E, 0x004F, 0x0053, 0x006A, 0x0070, 0x0084, 0x008A, 0x008B,
@@ -76,6 +82,7 @@ static void gumshoe_add_default_followers(void) {
     for (i = 0; i < sizeof(addrs) / sizeof(addrs[0]); i++) {
         debug_server_add_follower(addrs[i], -1);
     }
+#endif
 }
 
 static void gumshoe_append_json(char **dst, size_t *remaining, const char *fmt, ...) {
