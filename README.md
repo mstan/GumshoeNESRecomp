@@ -3,7 +3,7 @@
 Static recompilation of Gumshoe (NES) for native PC.
 Built with the [NESRecomp](https://github.com/mstan/nesrecomp) framework.
 
-> **Status: Believed to be 100% playable.** Zapper hit detection verified against Mesen 2 oracle. If you find a bug, please open an issue.
+> **Status: Playable end-to-end with one known cosmetic bug.** As of 2026-05-04 the game boots past the title screen, gameplay (Mr. Stevenson, balloons, scoring, Zapper input) works, but the top-left HUD elements (timer and shot counter) do not render — see [ISSUES.md ISSUE-000](ISSUES.md). Gameplay itself is unaffected. If you find another bug, please open an issue.
 
 ## About
 
