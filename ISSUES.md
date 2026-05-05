@@ -1,10 +1,53 @@
 # GumshoeNESRecomp — Open Issues
 
 ## ISSUE-001: Missing HUD elements (timer + shot counter)
-**Status:** Open
+**Status:** Resolved 2026-05-04
 **Priority:** P1 (cosmetic but obvious)
 **First observed:** 2026-05-04, after the GxROM dispatch + NMI vector fix
 landed and the game became playable past the title screen.
+
+### Resolution
+GxROM static-JSR bank-pairing bug in
+`nesrecomp/recompiler/src/code_generator.c:1127`.  For JSR targets at
+`$C000+`, the recompiler unconditionally passed `fixed_bank` as the
+source bank to `emit_call_target`, which then went through
+`format_func_name`'s "fixed-bank rule" (`bank == fixed_bank && addr >= $C000`
+strips the `_b` suffix) and emitted `func_<addr>()` resolving to the
+last bank's body.
+
+For traditional fixed-bank mappers (UxROM/MMC1/MMC3/NROM) this is
+correct — `$C000+` *is* always served by the fixed bank.  For GxROM
+(mapper 66, full 32K window switch) both halves switch together and
+`$C000+` is the source's `bank | 1`, NOT a fixed bank.  Mirrors the
+`call_by_address` GxROM pairing fix in 49f9fe3.
+
+The Gumshoe symptom was that `bank00:$82B5: JSR $D158` (the master
+per-frame render dispatcher's HUD-render call) emitted `func_D158()`
+which resolved to bank 7's body at $D158 — a button-state EOR diff
+loop — instead of bank 1's HUD render at $D158 (`JSR $D27A; JSR $D2B5;
+LDY #$10; LDA $ED; ...` writing timer/shot-counter sprites to OAM
+slots 54-63 at $02D8-$02FF).  HUD render simply never ran.
+
+The bank-1 HUD render writes 6 sprites for the timer (slots 54-59,
+X = $20-$48 with sprites 54+55 force-hidden as anchor placeholders
+and 56-59 as "M:SS" digits + colon at Y = $10) and 4 sprites for the
+shot counter (slots 60-63, X = $30-$48 at Y = $18, "=NNN" pattern).
+
+### Fix
+Gate the `fixed_bank` lookup behind `rom_mapper_full_32k_switch(rom)`:
+GxROM uses the source bank (`gxrom_paired_bank` resolves to `bank | 1`
+for `$C000+`); other mappers keep the fixed_bank lookup unchanged.
+Also force `force_dynamic` for SRAM-sourced GxROM JSRs since the
+source bank is unknown at compile time there.
+
+### Validation
+- Visual: gameplay screenshot shows "5:57" timer + "=050" shot counter
+  + portrait icon at top-left.  Sprites 54-63 raw OAM Y stable at
+  $10/$18 across 15 frame samples (was $F4 hidden before).
+- Smoke matrix: regenerated Faxanadu, Zelda, Metroid, Yoshi, Duck Hunt;
+  `*_full.c` SHA-256 byte-identical pre/post-fix (none are mapper 66,
+  so the fix's `else` branch produces the original behavior).
+- `dispatch_miss_info` reports zero misses during gameplay.
 
 ### Observed behavior
 - The top-left HUD is absent during gameplay:
