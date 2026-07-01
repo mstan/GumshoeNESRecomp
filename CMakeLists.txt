@@ -23,7 +23,6 @@ add_executable(GumshoeRecomp
     extras.c
     nes_snapshot.c
     verify_mode.c
-    recomp_stack.c
     generated/gumshoe_full.c
     generated/gumshoe_dispatch.c
 )
