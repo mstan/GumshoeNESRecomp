@@ -1,0 +1,4 @@
+entry_type,addr,bank,status,canonical_addr,canonical_bank
+extra_func,9BBF,0,AUTO_DISCOVERED,,
+extra_func,9DEA,2,AUTO_DISCOVERED,,
+extra_func,80BF,6,AUTO_DISCOVERED,,
