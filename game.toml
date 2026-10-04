@@ -1,6 +1,7 @@
 # game.toml — Gumshoe (NES, Mapper 66 / GxROM, 128KB PRG, 32KB CHR ROM)
 
 [game]
+name = "Gumshoe"
 output_prefix = "gumshoe"
 
 # Inline dispatch: pops return address to find an inline 2-byte LE address
