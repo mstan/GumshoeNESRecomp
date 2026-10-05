@@ -48,3 +48,14 @@ bank2 = [
 bank6 = [
     0x80BF,
 ]
+
+# ---- the widescreen mod's hook site (runner/cyc/cyc_hooks.h) ----
+# docs/WIDESCREEN.md. Keyed on the CRC-32 of the first `length` bytes at the
+# address (no game bytes in this repository): NMI entry of the stage banks 0-2
+# (bank 3, the title, has other code there). Disabled, a site costs a flag test.
+
+[[mod_function_hook]]
+id = "gumshoe.widescreen.nmi"          # NMI: edge objects' packets for the next picture
+addr = 0x8031
+length = 8
+crc32 = 0x6F33C967

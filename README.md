@@ -27,6 +27,15 @@ Gumshoe requires the NES Zapper light gun. This recompilation maps your **mouse*
 - A **crosshair** is drawn at the aim point (white normally, red when firing)
 - The OS cursor is hidden while in the game window
 
+## Widescreen (experimental)
+
+An opt-in Mods package extends the stage across 16:9, 21:9, 32:9 or a Fit
+window, from the game's own nametable writes and column builder, and draws
+objects crossing the screen edges in full. The Zapper still aims at the
+native picture: the margins are off the console's screen. Enable
+**Widescreen (Experimental)** in the launcher's or in-game Mods screen; see
+[docs/WIDESCREEN.md](docs/WIDESCREEN.md).
+
 ## What Works
 
 - Full gameplay with Zapper-as-mouse input

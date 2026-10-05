@@ -16,6 +16,10 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
         message(FATAL_ERROR "Set NESRECOMP_ROM to the original ROM image for this title")
     endif()
     include("${NESRECOMP_ROOT}/runner/cyc/project.cmake")
+    # The widescreen mod (docs/WIDESCREEN.md): an opt-in package of the mod
+    # runtime (the launcher's Mods screen; mods/preloaded) hooking the
+    # game.toml [[mod_function_hook]] site. With it off the program runs
+    # exactly as without it.
     nesrecomp_add_cycle_game(GumshoeRecomp
         ROM "${NESRECOMP_ROM}"
         GAME_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/game.toml"
@@ -23,7 +27,20 @@ if(NESRECOMP_BACKEND STREQUAL "cycle")
         SEED_FILE "${NESRECOMP_CYCLE_SEEDS}"
         PLAYERS 1
         ZAPPER_PORT 2
-        BOXART "${CMAKE_CURRENT_SOURCE_DIR}/boxart.tga")
+        MODS GAME_ID "gumshoe"
+        BOXART "${CMAKE_CURRENT_SOURCE_DIR}/boxart.tga"
+        HOST_EXTRAS
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gumshoe_ws.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gumshoe_ws_world.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/gumshoe_ws_objects.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/mods/widescreen_plugin.c")
+    target_include_directories(GumshoeRecomp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    # The preloaded mod catalog beside the executable (packages only: the
+    # player's selection, state.toml, is written there by the launcher).
+    add_custom_command(TARGET GumshoeRecomp POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/mods/preloaded" "$<TARGET_FILE_DIR:GumshoeRecomp>/mods"
+        COMMENT "Staging the preloaded mod packages")
     return()
 elseif(NOT NESRECOMP_BACKEND STREQUAL "legacy")
     message(FATAL_ERROR "NESRECOMP_BACKEND must be cycle or legacy")

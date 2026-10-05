@@ -1,0 +1,70 @@
+format_version = 1
+id = "gumshoe.enhancement.widescreen"
+version = "1.0.0"
+name = "Gumshoe Widescreen (Experimental)"
+author = "NESRecomp"
+description = "Adaptive custom rendering of the stage beyond the native screen, from the game's own nametable writes and column builder. The Zapper still aims at the native picture only."
+license = "PolyForm-Noncommercial-1.0.0"
+resolver = "declarative"
+save_compatibility = "stock"
+
+[[target]]
+game_id = "gumshoe"
+rom_crc32 = "beb8ab01"
+
+[[feature]]
+id = "widescreen"
+name = "Widescreen (Experimental)"
+description = "Extend the stage across the wider view and draw objects crossing the native edges in full. Objects keep their original spawning and timing, and the Zapper can only hit targets inside the native picture."
+group = "Display"
+exclusive_group = "display-mode"
+default_enabled = false
+
+[[plugin]]
+feature = "widescreen"
+id = "gumshoe.widescreen"
+
+[[option]]
+feature = "widescreen"
+id = "aspect"
+label = "Aspect"
+type = "choice"
+default = "fit"
+[[option.choice]]
+value = "fit"
+label = "Fit window (adaptive)"
+[[option.choice]]
+value = "16-9"
+label = "16:9"
+[[option.choice]]
+value = "21-9"
+label = "21:9"
+[[option.choice]]
+value = "32-9"
+label = "32:9"
+
+[[option]]
+feature = "widescreen"
+id = "camera"
+label = "Camera"
+type = "choice"
+default = "edges"
+[[option.choice]]
+value = "edges"
+label = "Stay inside stage edges"
+[[option.choice]]
+value = "centered"
+label = "Keep native view centered"
+
+[[option]]
+feature = "widescreen"
+id = "hud"
+label = "Timer and shots"
+type = "choice"
+default = "edges"
+[[option.choice]]
+value = "edges"
+label = "Screen edge"
+[[option.choice]]
+value = "center"
+label = "Original position"
