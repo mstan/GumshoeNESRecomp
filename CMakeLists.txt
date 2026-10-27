@@ -8,6 +8,11 @@ set(NESRECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/nesrecomp" CACHE PATH "NESRecomp
 
 set(NESRECOMP_BACKEND "cycle" CACHE STRING "CPU backend: cycle or legacy")
 set_property(CACHE NESRECOMP_BACKEND PROPERTY STRINGS cycle legacy)
+# Qualified Windows x64 renderer default; explicit cache choices remain honored.
+if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND
+   CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64|X86_64)$")
+    set(NESRECOMP_PPU_IMPL "HLE" CACHE STRING "PPU implementation: LLE or HLE")
+endif()
 if(NESRECOMP_BACKEND STREQUAL "cycle")
     set(NESRECOMP_ROM "" CACHE FILEPATH "ROM image to recompile (not distributed)")
     set(NESRECOMP_CYCLE_SEEDS "${CMAKE_CURRENT_SOURCE_DIR}/cyc_seeds.txt" CACHE FILEPATH "Cycle coverage seeds")
